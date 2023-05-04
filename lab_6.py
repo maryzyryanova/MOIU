@@ -27,23 +27,37 @@ if __name__ == "__main__":
                 [1, 1, 0, 0],
                 [1, 0, 1, 0],
                 [0, 0, 0, 0]])
+    counter = 0
+    print('----Исходные данные задачи---')
+    print('Матрица A: ', A, sep='\n')
+    print('Матрица D: ', D, sep='\n')
+    print('Вектор B: ', B, sep='')
+    print('Вектор с: ', c, sep='')
+    print('Вектор x: ', x, sep='')
     while True:
+        counter += 1
+        print(f'----------Итерация {counter}----------')
         A_b = A[:, B]
         A_b_inv = np.linalg.inv(A_b)
 
-        # Нахождение промежуточных векторов и проверка оптимальности
+        print('Нахождение промежуточных векторов и проверка оптимальности')
         c_x = c + np.dot(x, D)
         c_b = get_basis_vector(c_x, B)
         c_b = [i*(-1) for i in c_b]
         u_x = np.dot(c_b, A_b_inv)
         delta_x = np.dot(u_x, A) + c_x
+        print('Вектор с(x): ', c_x, sep='')
+        print('Вектор u(x): ', u_x, sep='')
+        print('Вектор ∆(x): ', delta_x, sep='')
 
         j0 = check(delta_x)
         if j0 == -1:
-            print(x)
+            print('Условие оптимальности выполняется => задача решена!')
+            print('Оптимальный план задачи: ', x, sep='')
             break
-
-        # Находим  вектор l
+        print('Не все компоненты вектора ∆(x) неотрицательные, переходим на следующий шаг.')
+        print('Выбираем отрицательную компоненту плана ∆(x) и индекс выбранной компоненты запоминаем в переменной j0')
+        print('Индекс выбранной компоненты: ', j0, sep='')
         l = np.zeros(len(x))
         l[j0] = 1
         A_b_ext =A[:, Bs]
@@ -57,8 +71,9 @@ if __name__ == "__main__":
         b_starred = np.concatenate((D[Bs, j0], A[:, j0]))
         x_temp = np.dot(-H_inv, b_starred)
         l[:len(Bs)] = x_temp[:len(Bs)]
+        print('Находим  вектор l: ', l, sep='')
 
-        # Находим Θ для каждого элемента множества расширенной опоры ограничений
+        print('Находим Θ для каждого элемента множества расширенной опоры ограничений')
         sigma = np.dot(np.dot(l, D), l)
         theta = {}
         theta[j0] = np.inf if sigma == 0 else np.abs(delta_x[j0]) / sigma
@@ -71,13 +86,17 @@ if __name__ == "__main__":
 
         j_s = min(theta, key=theta.get)
         theta_0 = theta[j_s]
+        print('Найденное Θ: ', theta, sep='')
+        print('Θ минимальное: ', theta_0, sep='')
+        print('Индекс минимума: ', j_s, sep='')
 
-        # Проверка ограниченности целевой функции
+        print('Проверка ограниченности целевой функции')
         if theta_0 == np.inf:
-            print("'The function is not bounded on the set of admissible plans'")
+            print('Функция не ограничена множеством допустимых планов')
 
-        # Обновление допустимого плана
+        print('Обновим допустимый план')
         x = x + theta_0 * l
+        print('Обновленный допустимый план: ', x, sep='')
         if j_s == j0:
             Bs = np.append(Bs, j_s)
         elif j_s in Bs and j_s not in B:
@@ -86,7 +105,7 @@ if __name__ == "__main__":
             third_condition = False
             s = B.index(j_s)
 
-            # Обновляем опоры ограничений
+            print('Обновляем опоры ограничений')
             for j_plus in set(Bs).difference(B):
                 if (np.dot(A_b_inv, A[:, j_plus]))[s] != 0:
                     third_condition = True
@@ -96,4 +115,6 @@ if __name__ == "__main__":
             if not third_condition:
                 B[s] = j0
                 Bs[Bs.index(j_s)] = j0
+            print('Обновленные опоры ограничений: ', Bs, sep='')
+
     
